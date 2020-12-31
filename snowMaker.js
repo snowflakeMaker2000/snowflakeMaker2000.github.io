@@ -50,7 +50,6 @@ startingPoint.click(function(e) {
     endCut();
     startingPoint.radius(0);
     line.remove();
-    startingPoint.radius(0);
     helpBox.timeline().stop();
     helpBox.opacity(0.0)
     e.stopPropagation();
@@ -78,6 +77,8 @@ document.addEventListener('keyup', (e) => {
     if(makingCut){
         if(keyName === ' ') {
             endCut();
+        } else if(keyName === 'Backspace') {
+            cancelCut();
         }
     }
 })
@@ -95,6 +96,15 @@ function endCut() {
     line.remove();
     mask.add(newCut)   
     path.maskWith(mask)
+    makingCut = false;
+}
+
+function cancelCut() {
+    newCut.remove();
+    startingPoint.radius(0);
+    line.remove();
+    helpBox.timeline().stop();
+    helpBox.opacity(0.0)
     makingCut = false;
 }
 
