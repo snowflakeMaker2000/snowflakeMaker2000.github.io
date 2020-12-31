@@ -74,12 +74,11 @@ draw.click(function(e) {
 
 document.addEventListener('keyup', (e) => {
     const keyName = event.key;
-    if(makingCut){
-        if(keyName === ' ') {
-            endCut();
-        } else if(keyName === 'Backspace') {
-            cancelCut();
-        }
+    if(makingCut && keyName === 'Backspace') {
+        cancelCut();
+    }
+    if(keyName === 'Enter') {
+        unfold();
     }
 })
 
@@ -94,7 +93,8 @@ function endCut() {
     newCut.Z();
     newCut.fill({color: 'black', opacity: 1.0})
     line.remove();
-    mask.add(newCut)   
+    mask.add(newCut.clone())  
+    newCut.remove();
     path.maskWith(mask)
     makingCut = false;
 }
@@ -116,6 +116,7 @@ function unfold() {
         document.getElementById("foldButton").innerHTML = "Unfold";
     } else{
         open = true;
+        cancelCut();
         segments = draw.group();
         for(var i =0; i < 12; i++) {
             if(i%2 == 0) {
