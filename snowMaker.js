@@ -25,28 +25,46 @@ let makingCut = false;
 let newCut;
 let line = draw.line();
 let originPoint;
+let startingPoint = draw.circle(0).fill('lightgray');
+
+startingPoint.mouseover(function() {
+    if(makingCut){
+        startingPoint.radius(7);
+    }
+})
+startingPoint.mouseout(function() {
+    if(makingCut){
+        startingPoint.radius(5);
+    }
+})
+startingPoint.click(function(e) {
+    endCut();
+    startingPoint.radius(0);
+    line.remove();
+    startingPoint.radius(0);
+    e.stopPropagation();
+})
+
 draw.click(function(e) {
     if(!makingCut) {
         makingCut = true;
         newCut = draw.path().M(e.offsetX,e.offsetY)
-        newCut.fill('black').stroke({ color: 'black', width: 1, linecap: 'round', linejoin: 'round' })         
+        newCut.fill({ color: 'black', opacity: 0.0}).stroke({ color: 'black', width: 1, linecap: 'round', linejoin: 'round' })
+        startingPoint.radius(5).cx(e.offsetX).cy(e.offsetY);
+        startingPoint.front();
+
     } else {
         newCut.L(e.offsetX,e.offsetY)
     }
     originPoint = {x: e.offsetX, y: e.offsetY}
     line.remove();
-    line = draw.line(originPoint.x, originPoint.y, originPoint.x, originPoint.y).stroke({ color: 'black', width: 1, linecap: 'round', linejoin: 'round' })         
+    line = draw.line(originPoint.x, originPoint.y, originPoint.x-10, originPoint.y-10).stroke({ color: 'black', width: 1, linecap: 'round', linejoin: 'round' })         
 })
 draw.dblclick(function(e) {
     if(makingCut){
         e.preventDefault();
         newCut.L(e.offsetX,e.offsetY);
-        newCut.Z();
-        newCut.fill('black')
-        line.remove();
-        mask.add(newCut)   
-        path.maskWith(mask)
-        makingCut = false;
+        endCut();
     }
 })
 
@@ -54,21 +72,25 @@ document.addEventListener('keyup', (e) => {
     const keyName = event.key;
     if(keyName === ' ') {
        if(makingCut){
-        //newCut.L(e.offsetX,e.offsetY);
-        newCut.Z();
-        newCut.fill('black')
-        line.remove();
-        mask.add(newCut)   
-        path.maskWith(mask)
-        makingCut = false;
+        endCut();
     } 
     }
 })
 draw.mousemove(function(e) {
     if(makingCut) {
         line.plot(originPoint.x, originPoint.y, e.offsetX, e.offsetY)
+        startingPoint.front();
     }
 })
+
+function endCut() {
+    newCut.Z();
+    newCut.fill({color: 'black', opacity: 1.0})
+    line.remove();
+    mask.add(newCut)   
+    path.maskWith(mask)
+    makingCut = false;
+}
 
 
 function unfold() {
@@ -88,4 +110,16 @@ function unfold() {
         }
         document.getElementById("foldButton").innerHTML = "Close";
     }
+}
+
+function reset() {
+    if(open) {
+        segments.remove();
+        open = false;
+        document.getElementById("foldButton").innerHTML = "Unfold";
+    }
+    mask.remove();
+    mask = draw.mask();
+    mask.add(path.clone())
+    path.maskWith(mask)
 }
