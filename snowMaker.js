@@ -6,8 +6,9 @@ var draw;
 var path;
 let open = false;
 let segments;
+let radius = 230;
 
-let radius = 240;
+
 draw = SVG().addTo('#drawing').size(width, height)
 var bkgrd = draw.rect(width,height).fill('brown');
 
@@ -26,15 +27,23 @@ let newCut;
 let line = draw.line();
 let originPoint;
 let startingPoint = draw.circle(0).fill('lightgray');
+let helpBox = draw.nested();
+let helpText = helpBox.text("Click to complete cut").fill("black");
+let helpRect = helpBox.rect(helpText.bbox().width + 10, helpText.bbox().height + 10).radius(5).fill("white").stroke({ color: '#444', width: 5, opacity: .6 }).opacity(1.0).backward()
+helpText.center(helpRect.cx(), helpRect.cy());
+helpBox.opacity(0.0);
 
-startingPoint.mouseover(function() {
+startingPoint.mouseover(function(e) {
     if(makingCut){
-        startingPoint.radius(7);
+        startingPoint.radius(10);
+        helpBox.move(e.offsetX-helpRect.width()-10,e.offsetY-helpRect.height()-10).animate(100,500,'now').opacity(1.0);
     }
 })
 startingPoint.mouseout(function() {
     if(makingCut){
-        startingPoint.radius(5);
+        startingPoint.radius(8);
+        helpBox.timeline().stop();
+        helpBox.opacity(0.0)
     }
 })
 startingPoint.click(function(e) {
@@ -42,6 +51,8 @@ startingPoint.click(function(e) {
     startingPoint.radius(0);
     line.remove();
     startingPoint.radius(0);
+    helpBox.timeline().stop();
+    helpBox.opacity(0.0)
     e.stopPropagation();
 })
 
@@ -50,7 +61,7 @@ draw.click(function(e) {
         makingCut = true;
         newCut = draw.path().M(e.offsetX,e.offsetY)
         newCut.fill({ color: 'black', opacity: 0.0}).stroke({ color: 'black', width: 1, linecap: 'round', linejoin: 'round' })
-        startingPoint.radius(5).cx(e.offsetX).cy(e.offsetY);
+        startingPoint.radius(8).cx(e.offsetX).cy(e.offsetY);
         startingPoint.front();
 
     } else {
@@ -58,24 +69,19 @@ draw.click(function(e) {
     }
     originPoint = {x: e.offsetX, y: e.offsetY}
     line.remove();
-    line = draw.line(originPoint.x, originPoint.y, originPoint.x-10, originPoint.y-10).stroke({ color: 'black', width: 1, linecap: 'round', linejoin: 'round' })         
+    line = draw.line(originPoint.x, originPoint.y, originPoint.x, originPoint.y).stroke({ color: 'black', width: 1, linecap: 'round', linejoin: 'round' })         
 })
-draw.dblclick(function(e) {
-    if(makingCut){
-        e.preventDefault();
-        newCut.L(e.offsetX,e.offsetY);
-        endCut();
-    }
-})
+
 
 document.addEventListener('keyup', (e) => {
     const keyName = event.key;
-    if(keyName === ' ') {
-       if(makingCut){
-        endCut();
-    } 
+    if(makingCut){
+        if(keyName === ' ') {
+            endCut();
+        }
     }
 })
+
 draw.mousemove(function(e) {
     if(makingCut) {
         line.plot(originPoint.x, originPoint.y, e.offsetX, e.offsetY)
